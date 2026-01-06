@@ -638,7 +638,7 @@ def get_artifact_details():
             if item['unlock_var'] and item['unlock_var'].get():
                 current_unlocks_used += 1
 
-            if item['hourglass_var'] and item ['unlock_var'].get():
+            if item['hourglass_var'] and item ['hourglass_var'].get():
                 current_hourglass_used += 1
 
         cap_text_var.set(f"필수 강화: {current_required} / 가용: {total_capacity}")
@@ -732,7 +732,8 @@ def get_artifact_details():
                     'priority_var': var_pri,
                     'unlock_var': var_unlock,
                     'scale_cb': cb_scale,
-                    'devotion_var': var_devotion  # 저장
+                    'devotion_var': var_devotion,
+                    'hourglass_var': var_hourglass
                 })
 
     def validate_and_start():
