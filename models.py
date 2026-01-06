@@ -24,8 +24,8 @@ class Artifact(Item):
         self.current_enchant = current_enchant
         self.priority = priority
         self.is_unique = is_unique
-        self.is_unit = is_unit
-        self.is_spell = is_spell
+        self.is_unit = is_unit # 동료 소환 여부(헌신의 휘장)
+        self.is_spell = is_spell # 마법서 여부(빛나는 모래시계)
         self.quant = quant
         self.scale_position = None  # 대립의 천칭용 (좌측/우측)
         self.apply_devotion = False # 헌신의 휘장 적용 여부
