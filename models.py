@@ -18,13 +18,14 @@ class Tablet(Item):
 
 class Artifact(Item):
     def __init__(self, name, max_level, current_enchant=0, constraint=None, priority=False, combo=None,
-                 is_unique=False, is_unit=False,quant=0):
+                 is_unique=False, is_unit=False, is_spell=False, quant=0):
         super().__init__(name, 'Artifact')
         self.max_level = max_level
         self.current_enchant = current_enchant
         self.priority = priority
         self.is_unique = is_unique
         self.is_unit = is_unit
+        self.is_spell = is_spell
         self.quant = quant
         self.scale_position = None  # 대립의 천칭용 (좌측/우측)
         self.apply_devotion = False # 헌신의 휘장 적용 여부
