@@ -16,7 +16,6 @@ artifacts = [
     Artifact("전사의 증표", max_level=5, combo="견고", is_unique=True),
     Artifact("찌르기 교본", max_level=0, combo="견고", is_unique=True),
     Artifact("형광 부적", max_level=4, combo="견고", is_unique=True),
-    Artifact("무뎌진 방울", max_level=2, combo="견고", is_unique=True),
     Artifact("생명의 손길", max_level=3, combo="견고", is_unique=True),
     Artifact("아그마 투영검 190,191번", max_level=7, combo="견고", is_unique=True),
     Artifact("재장전용 나무 상자", max_level=4, combo="견고", is_unique=True),
@@ -80,24 +79,21 @@ artifacts = [
     Artifact("날개", max_level=5, combo="바람노래", is_unique=True),
     Artifact("무지갯빛 깃털", max_level=2, combo="바람노래", is_unique=True),
     # 신비
+    Artifact("조화의 수정", max_level=1, combo="신비", constraint='harmony' ,is_unique=False),
     Artifact("강화 포션 뚜껑", max_level=0, combo="신비", is_unique=True),
-    Artifact("크리톤의 인장", max_level=2, combo="신비", is_unique=False),
-    Artifact("황금 단풍잎", max_level=0, combo="신비", is_unique=True),
     Artifact("대축복", max_level=2, combo="신비", is_unique=True, is_spell=True),
-    Artifact("붉은 천 조각", max_level=3, combo="신비", is_unique=True),
     Artifact("순백의 망토", max_level=5, combo="신비", is_unique=True),
     Artifact("용골 파편", max_level=3, combo="신비", is_unique=True, constraint='edge'),
     Artifact("은팔찌", max_level=3, combo="신비", is_unique=True),
     Artifact("호박석", max_level=3, combo="신비", is_unique=True),
     Artifact("다용도 벨트", max_level=3, combo="신비", is_unique=True, constraint={'bottom', 'top_count'}),
-    Artifact("오잉크 주술사의 목걸이", max_level=4, combo="신비", is_unique=False),
     Artifact("푸른 고리", max_level=2, combo="신비", is_unique=True),
     Artifact("하얀 알 껍질", max_level=4, combo="신비", is_unique=True),
     Artifact("혈석 반지", max_level=2, combo="신비", is_unique=True),
     Artifact("친타마니 돌", max_level=0, combo="신비", is_unique=True),
+    Artifact("충격 증폭기", max_level=14, combo="신비", is_unique=True),
     # 마법공학
     Artifact("라이트닝 볼트", max_level=1, combo="마법공학", is_unique=True, is_spell=True),
-    Artifact("캘세더니 열쇠", max_level=6, combo="마법공학", is_unique=False),
     Artifact("반딧불이", max_level=2, combo="마법공학", is_unique=True),
     Artifact("번개 부메랑", max_level=4, combo="마법공학", is_unique=True, is_spell=True),
     Artifact("썬더의 귀걸이", max_level=5, combo="마법공학", is_unique=True),
@@ -106,6 +102,7 @@ artifacts = [
     Artifact("찌릿충", max_level=5, combo="마법공학", is_unique=True),
     Artifact("천둥 갑옷", max_level=4, combo="마법공학", is_unique=True, is_spell=True),
     Artifact("뇌운추적 나침반", max_level=3, combo="마법공학", is_unique=True),
+    Artifact("전격의 부적", max_level=3, combo="마법공학", is_unique=False),
     # 얼음무구
     Artifact("눈보라 망치", max_level=5, combo="얼음무구", is_unique=True),
     Artifact("아이스 스타", max_level=5, combo="얼음무구", is_unique=True),
@@ -202,6 +199,16 @@ artifacts = [
     Artifact("전투 마법사의 장갑", max_level=3, combo="아카데미", is_unique=True),
     Artifact("라일리의 회중시계", max_level=2, combo="아카데미", is_unique=True, constraint='bottom'),
     Artifact("비어 있는 검 손잡이", max_level=6, combo="아카데미", is_unique=True),
+    # 교섭
+    Artifact("크리톤의 인장", max_level=2, combo="교섭", is_unique=False),
+    Artifact("황금 단풍잎", max_level=0, combo="교섭", is_unique=True),
+    Artifact("행운의 메달", max_level=2, combo="교섭", is_unique=True),
+    # 저주
+    Artifact("무뎌진 방울", max_level=2, combo="저주", is_unique=True),
+    Artifact("오잉크 주술사의 목걸이", max_level=4, combo="저주", is_unique=False),
+    Artifact("붉은 천 조각", max_level=3, combo="저주", is_unique=True),
+    Artifact("중화제 흑", max_level=3, combo="저주", is_unique=False),
+    Artifact("초록 잉크병", max_level=3, combo="저주", constraint='edge' ,is_unique=False),
     # 태양검
     Artifact("솔리스 프라투", max_level=2, combo="태양검", is_unique=False),
     Artifact("영원의 화로", max_level=2, combo="태양검", is_unique=True),
@@ -219,6 +226,7 @@ artifacts = [
     Artifact("경고 문서", max_level=1, combo="", is_unique=True),
     Artifact("홍차 잎 주머니", max_level=2, combo="", is_unique=True),
     Artifact("혈석 귀걸이", max_level=3, combo="", is_unique=True),
+    Artifact("캘세더니 열쇠", max_level=3, combo="", is_unique=True),
     # 이중 콤보
     Artifact("미니 발리스타", max_level=4, combo={"먹구름", "동료"}, is_unique=True, is_unit=True),
     Artifact("바람개비", max_level=2, combo={"바람노래", "그림자"}, is_unique=True),
@@ -232,15 +240,16 @@ artifacts = [
     Artifact("바위코끼리", max_level=4, combo={"수호", "바람노래"}, is_unique=True),
     Artifact("방패 가방", max_level=3, combo={"수호", "아카데미"}, is_unique=True),
     Artifact("봉인된 테자스", max_level=3, combo={"잉걸불", "빙하"}, is_unique=True),
-    Artifact("소리굽쇠", max_level=5, combo={"아카데미", "견고"}, is_unique=True),
+    Artifact("소리굽쇠", max_level=4, combo={"아카데미", "견고"}, is_unique=True),
     Artifact("악보 '은하'", max_level=2, combo={"행성", "바람노래"}, is_unique=True),
     Artifact("악보 '폭풍'", max_level=3, combo={"먹구름", "바람노래"}, is_unique=True),
     Artifact("얼음구름 나비", max_level=3, combo={"먹구름", "빙하"}, is_unique=True),
-    Artifact("영원의 식", max_level=0, combo={"얼음무구", "태양검"}, is_unique=True),
+    Artifact("영원의 식", max_level=3, combo={"얼음무구", "태양검"}, is_unique=True),
     Artifact("일렁이는 눈", max_level=4, combo={"그림자", "정밀"}, is_unique=True),
     Artifact("전술 지침서", max_level=3, combo={"동료", "정밀"}, is_unique=True),
     Artifact("플럭스 결합기 Mk.2", max_level=3, combo={"먹구름", "동료"}, is_unique=True),
-    Artifact("플리트비체의 물방울", max_level=2, combo={"얼음무구", "호수"}, is_unique=True),
+    Artifact("플리트비체의 물방울", max_level=0, combo={"얼음무구", "호수"}, is_unique=True),
+    Artifact("영원한 겨울", max_level=3, combo={"빙하", "견고"}, is_unique=True),
 ]
 
 tablets = [
@@ -281,6 +290,7 @@ tablets = [
     Tablet("출구", directions=[(5, 1), (6, 2), (7, 1)], turnable=False, tier='uncommon'),
     Tablet("파도", directions=[(-7, 2), (-6, -1), (-1, -1)], turnable=True, tier='uncommon'),
     Tablet("헌정", directions=[(-7, 1), (-5, 1), (5, 1), (7, 1)], turnable=True, tier='uncommon'),
+    Tablet("명예", directions=[(-6, 2), (-13, 1)], turnable=True, tier='uncommon'),
     # 희귀 석판 rare
     Tablet("기반", directions=[('ROW', 1)], turnable=False, tier='rare'),
     Tablet("권능", directions=[(-6, 1)], turnable=True, tier='rare'),
@@ -300,5 +310,12 @@ tablets = [
     Tablet("백일몽", directions=[(-13, 1), (-11, 1), (-7, 1), (-5, 1), (5, 1), (7, 1), (11, 1), (13, 1)]
            , turnable=True, tier='legendary'),
     Tablet("압축", directions=[(1, 3), (2, 2), (3, 1)], turnable=True, tier='legendary'),
-    Tablet("확신", directions=[(-6, 5)], turnable=True, tier='legendary')
+    Tablet("확신", directions=[(-6, 5)], turnable=True, tier='legendary'),
+    Tablet("환대", directions=[(-1, 1), (-6, 2), (-1, "UNLOCK"), (2, "UNLOCK")], turnable=False, tier='legendary'),
+    Tablet("확신", directions=[(-6, 5)], turnable=True, tier='legendary'),
+    Tablet("용기", directions=[("BACKSLASH", 1), (-5, 2), (5, 2)], turnable=True, tier='legendary'),
+    Tablet("평화", directions=[(-1, 3), (1, 3)], turnable=True, tier='legendary'),
 ]
+# 이미지 필요: 환대, 용기, 평화, 명예
+# 영원한 겨울, 행운의 메달, 중화제 흑, 초록 잉크병, 전격의 부적, 조화의 수정, 충격증폭기
+

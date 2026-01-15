@@ -300,7 +300,7 @@ def get_input_artifact():
         '그림자': '#2F4F4F', '호수': '#1E90FF', '바람노래': '#32CD32', '마법공학': '#FF1493',
         '얼음무구': '#ADD8E6', '행성': '#4B0082', '정밀': '#DC143C', '잉걸불': '#FF4500',
         '먹구름': '#708090', '수호': '#FFD700', '아카데미': '#4169E1', '태양검': '#FF8C00',
-        '무속성': '#333333'
+        '무속성': '#333333', '교섭': '#008080', '저주': '#8B0000'
     }
 
     frame_main_art = Frame(root, bg=BG_COLOR)
@@ -463,9 +463,6 @@ def get_input_artifact():
     update_artifact_status()
 
 
-# ==========================================
-# [UI 4: 아티팩트 세부 설정]
-# ==========================================
 def get_artifact_details():
     frame_name = "art_details"
     frame_detail = Frame(root, bg=BG_COLOR)
@@ -474,21 +471,29 @@ def get_artifact_details():
     show_frame(frame_name)
 
     # -----------------------------------------------------------
-    # [0. 사전 체크: 헌신의 휘장/대립의 천칭 보유 여부 확인]
+    # [0. 사전 체크: 특수 아티팩트 보유 여부 확인]
     # -----------------------------------------------------------
     has_devotion_badge = False
-    has_libra = False
     has_hourglass = False
+    has_key = False
+
+    # [New] 위치(좌/우) 선택이 필요한 아티팩트가 있는지 확인
+    # 대립의 천칭 OR 영원의 식
+    has_position_select = False
+
     total_hourglass_count = 0
+
     for art in artifacts:
         if art.quant > 0:
             if art.name == "헌신의 휘장":
                 has_devotion_badge = True
-            elif art.name == "대립의 천칭":
-                has_libra = True
+            elif art.name == "대립의 천칭" or art.name == "영원의 식":  # [New] 영원의 식 추가
+                has_position_select = True
             elif art.name == "빛나는 모래시계":
                 has_hourglass = True
                 total_hourglass_count = art.quant
+            elif art.name == "캘세더니 열쇠":
+                has_key = True
 
     # -----------------------------------------------------------
     # [1. 가용 포인트 & UNLOCK 개수 계산]
@@ -532,7 +537,7 @@ def get_artifact_details():
     info_frame.pack(pady=(0, 10))
 
     cap_text_var = StringVar()
-    cap_text_var.set(f"사용가능한 강화량: 0 / {total_capacity}")
+    cap_text_var.set(f"필수 강화: 0 / 가용: {total_capacity}")
     cap_label = Label(info_frame, textvariable=cap_text_var, bg=BG_COLOR, fg="blue", font=(FONT_NAME, 10))
     cap_label.pack(anchor="center")
 
@@ -572,50 +577,52 @@ def get_artifact_details():
     header_f = Frame(scrollable_frame, bg=BG_COLOR)
     header_f.pack(fill="x", pady=5)
 
-    # 1. 열 너비 설정
-    col_widths = [50, 160, 110, 60, 60]  # 기본 5개 열
-    if has_libra: col_widths.append(100)
+    col_widths = [50, 160, 110, 60, 60]  # 기본 5개
+
+    if has_position_select: col_widths.append(100)  # [New] 좌우 배치 열 (천칭 or 영원의식)
     if has_devotion_badge: col_widths.append(90)
     if has_hourglass: col_widths.append(80)
+    if has_key: col_widths.append(100)
 
     for i, w in enumerate(col_widths):
         header_f.grid_columnconfigure(i, minsize=w)
 
-    # 2. 열 번호 미리 계산
-    col_idx_libra = -1
+    # 열 인덱스 계산
+    col_idx_pos = -1
     col_idx_devotion = -1
     col_idx_hourglass = -1
+    col_idx_key = -1
 
-    current_col = 5  # 5번부터 시작
+    current_col = 5
 
-    if has_libra:
-        col_idx_libra = current_col
-        current_col += 1  # 천칭이 있으면 다음 칸으로 이동
-
+    if has_position_select:
+        col_idx_pos = current_col
+        current_col += 1
     if has_devotion_badge:
         col_idx_devotion = current_col
         current_col += 1
-
     if has_hourglass:
         col_idx_hourglass = current_col
         current_col += 1
+    if has_key:
+        col_idx_key = current_col
+        current_col += 1
 
-    # 3. 헤더 그리기
     Label(header_f, text="이미지", bg=BG_COLOR).grid(row=0, column=0)
     Label(header_f, text="이름", bg=BG_COLOR).grid(row=0, column=1)
     Label(header_f, text="강화 / 최대", bg=BG_COLOR).grid(row=0, column=2)
     Label(header_f, text="필수", bg=BG_COLOR).grid(row=0, column=3)
     Label(header_f, text="해제", bg=BG_COLOR, fg="green").grid(row=0, column=4)
 
-    if has_libra:
-        Label(header_f, text="대립의 천칭", bg=BG_COLOR).grid(row=0, column=col_idx_libra)
-
+    if has_position_select:
+        # [New] 헤더 이름을 두루뭉술하게 변경
+        Label(header_f, text="좌우 배치", bg=BG_COLOR).grid(row=0, column=col_idx_pos)
     if has_devotion_badge:
         Label(header_f, text="헌신의 휘장", bg=BG_COLOR, fg="#A0522D").grid(row=0, column=col_idx_devotion)
-
     if has_hourglass:
         Label(header_f, text="모래시계", bg=BG_COLOR, fg="#DAA520").grid(row=0, column=col_idx_hourglass)
-
+    if has_key:
+        Label(header_f, text="열쇠 속성", bg=BG_COLOR, fg="purple").grid(row=0, column=col_idx_key)
 
     instance_widgets = []
 
@@ -638,7 +645,7 @@ def get_artifact_details():
             if item['unlock_var'] and item['unlock_var'].get():
                 current_unlocks_used += 1
 
-            if item['hourglass_var'] and item ['hourglass_var'].get():
+            if item.get('hourglass_var') and item['hourglass_var'].get():
                 current_hourglass_used += 1
 
         cap_text_var.set(f"필수 강화: {current_required} / 가용: {total_capacity}")
@@ -662,17 +669,15 @@ def get_artifact_details():
                 for col_idx, width in enumerate(col_widths):
                     row_f.grid_columnconfigure(col_idx, minsize=width)
 
-                # 1. 이미지
+                # 1~5 기본 컬럼
                 tk_img = load_cached_image(f"{art.name}.PNG", art_image_dir, (40, 40))
                 l = Label(row_f, image=tk_img, bg=BG_COLOR)
                 l.image = tk_img
                 l.grid(row=0, column=0)
 
-                # 2. 이름
                 name_str = art.name + (f" #{i + 1}" if art.quant > 1 else "")
                 Label(row_f, text=name_str, anchor='w', bg=BG_COLOR).grid(row=0, column=1, sticky='w')
 
-                # 3. 강화
                 enc_frame = Frame(row_f, bg=BG_COLOR)
                 enc_frame.grid(row=0, column=2)
                 ent_lv = Entry(enc_frame, width=3, justify='center', validate='key', validatecommand=vcmd)
@@ -681,12 +686,10 @@ def get_artifact_details():
                 ent_lv.bind("<KeyRelease>", calculate_realtime)
                 Label(enc_frame, text=f"/ {art.max_level}", fg="gray", bg=BG_COLOR).pack(side="left")
 
-                # 4. 필수
                 var_pri = BooleanVar(value=False)
                 Checkbutton(row_f, variable=var_pri, bg=BG_COLOR, activebackground=BG_COLOR,
                             command=calculate_realtime).grid(row=0, column=3)
 
-                # 5. 조건 해제
                 var_unlock = None
                 if art.constraint:
                     var_unlock = BooleanVar(value=False)
@@ -695,16 +698,16 @@ def get_artifact_details():
                 else:
                     Label(row_f, text="-", bg=BG_COLOR, fg="lightgray").grid(row=0, column=4)
 
-                cb_scale = None
-                if has_libra:
-                    if art.name == "대립의 천칭":
-                        cb_scale = ttk.Combobox(row_f, values=["좌측", "우측"], width=4, state="readonly")
-                        cb_scale.set("좌측")
-                        cb_scale.grid(row=0, column=col_idx_libra)
+                # 6. 좌우 배치 (대립의 천칭 / 영원의 식)
+                cb_pos = None
+                if has_position_select:
+                    # [New] 두 아티팩트 모두 여기서 처리
+                    if art.name in ["대립의 천칭", "영원의 식"]:
+                        cb_pos = ttk.Combobox(row_f, values=["좌측", "우측"], width=4, state="readonly")
+                        cb_pos.set("좌측")
+                        cb_pos.grid(row=0, column=col_idx_pos)
                     else:
-                        # 천칭이 아니면 빈칸이라도 채워야 밀리지 않음
-                        Label(row_f, text="-", bg=BG_COLOR, fg="lightgray").grid(row=0,
-                                                                                 column=col_idx_libra)
+                        Label(row_f, text="-", bg=BG_COLOR, fg="lightgray").grid(row=0, column=col_idx_pos)
 
                 # 7. 헌신의 휘장
                 var_devotion = None
@@ -722,18 +725,29 @@ def get_artifact_details():
                     if art.is_spell:
                         var_hourglass = BooleanVar(value=False)
                         Checkbutton(row_f, variable=var_hourglass, bg=BG_COLOR, activebackground=BG_COLOR,
-                            command=calculate_realtime).grid(row=0, column=col_idx_hourglass)
+                                    command=calculate_realtime).grid(row=0, column=col_idx_hourglass)
                     else:
                         Label(row_f, text="-", bg=BG_COLOR, fg="lightgray").grid(row=0, column=col_idx_hourglass)
+
+                # 9. 캘세더니 열쇠
+                cb_key = None
+                if has_key:
+                    if art.name == "캘세더니 열쇠":
+                        cb_key = ttk.Combobox(row_f, values=["견고", "잉걸불", "빙하", "마법공학"], width=7, state="readonly")
+                        cb_key.set("견고")
+                        cb_key.grid(row=0, column=col_idx_key)
+                    else:
+                        Label(row_f, text="-", bg=BG_COLOR, fg="lightgray").grid(row=0, column=col_idx_key)
 
                 instance_widgets.append({
                     'base_art': art,
                     'enchant_ent': ent_lv,
                     'priority_var': var_pri,
                     'unlock_var': var_unlock,
-                    'scale_cb': cb_scale,
+                    'scale_cb': cb_pos,  # [New] 이름 변경됨 (cb_scale -> cb_pos)
                     'devotion_var': var_devotion,
-                    'hourglass_var': var_hourglass
+                    'hourglass_var': var_hourglass,
+                    'key_cb': cb_key
                 })
 
     def validate_and_start():
@@ -751,8 +765,8 @@ def get_artifact_details():
             cur_enc = int(val_str) if val_str.isdigit() else 0
             if cur_enc > instance.max_level: cur_enc = instance.max_level
             instance.current_enchant = cur_enc
-
             instance.priority = item['priority_var'].get()
+
             if instance.priority:
                 required_points += max(0, instance.max_level - instance.current_enchant)
 
@@ -760,30 +774,31 @@ def get_artifact_details():
                 unlocks_used += 1
                 instance.constraint = set()
 
-            if item['scale_cb']: instance.scale_position = item['scale_cb'].get()
+            # [New] 좌우 배치 저장 (천칭, 영원의 식 공용)
+            if item['scale_cb']:
+                instance.scale_position = item['scale_cb'].get()
 
             if item['devotion_var'] and item['devotion_var'].get():
                 instance.apply_devotion = True
 
-            if item['hourglass_var'] and item['hourglass_var'].get():
+            if item.get('hourglass_var') and item['hourglass_var'].get():
                 hourglass_used += 1
                 instance.apply_hourglass = True
+
+            if item.get('key_cb'):
+                selected_combo = item['key_cb'].get()
+                instance.combo = {selected_combo}
 
             final_instances.append(instance)
 
         warnings = []
-        if required_points > total_capacity:
-            warnings.append(f"- 필수 강화량 부족 ({required_points} > {total_capacity})")
-            logging.warning("필수 강화량 부족")
-        if unlocks_used > total_unlocks:
-            warnings.append(f"- UNLOCK 석판 부족 ({unlocks_used} > {total_unlocks})")
-            logging.warning("UNLOCK 석판 부족")
+        if required_points > total_capacity: warnings.append(f"- 필수 강화량 부족 ({required_points} > {total_capacity})")
+        if unlocks_used > total_unlocks: warnings.append(f"- UNLOCK 석판 부족 ({unlocks_used} > {total_unlocks})")
         if has_hourglass and hourglass_used > total_hourglass_count:
             warnings.append(f"- 모래시계 개수 초과 ({hourglass_used} > {total_hourglass_count})")
-            logging.warning("모래시계 개수 초과")
+
         if warnings:
-            msg = "다음과 같은 문제가 감지되었습니다:\n" + "\n".join(warnings) + "\n\n그래도 진행하시겠습니까?"
-            if not messagebox.askyesno("경고", msg): return
+            if not messagebox.askyesno("경고", "다음 문제가 있습니다:\n" + "\n".join(warnings) + "\n\n진행할까요?"): return
 
         root.destroy()
         arrangement(USER_INV_NUM, tablets, final_instances)
