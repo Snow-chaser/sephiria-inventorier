@@ -10,6 +10,7 @@ from PIL import Image, ImageTk
 # 모듈화
 from models import Artifact, Tablet
 from data import artifacts, tablets
+from solver import run_solver
 
 # 로깅 설정
 logging.basicConfig(
@@ -136,8 +137,7 @@ def get_input_inventory():
     center_frame.place(relx=0.5, rely=0.1, anchor="n")
 
     Label(center_frame, text="인벤토리 칸 수를 입력해주세요.", width=27, height=3, fg="black", bg=BG_COLOR, anchor='e').grid(row=0,
-                                                                                                                column=0,
-                                                                                                                padx=10)
+                                                                                                                column=0,                                                                               padx=10)
     entry = Entry(center_frame, width=20, validate='key', validatecommand=vcmd)
     entry.grid(row=0, column=1, padx=10)
 
@@ -477,7 +477,7 @@ def get_artifact_details():
     has_hourglass = False
     has_key = False
 
-    # [New] 위치(좌/우) 선택이 필요한 아티팩트가 있는지 확인
+    # 위치(좌/우) 선택이 필요한 아티팩트가 있는지 확인
     # 대립의 천칭 OR 영원의 식
     has_position_select = False
 
@@ -615,7 +615,6 @@ def get_artifact_details():
     Label(header_f, text="해제", bg=BG_COLOR, fg="green").grid(row=0, column=4)
 
     if has_position_select:
-        # [New] 헤더 이름을 두루뭉술하게 변경
         Label(header_f, text="좌우 배치", bg=BG_COLOR).grid(row=0, column=col_idx_pos)
     if has_devotion_badge:
         Label(header_f, text="헌신의 휘장", bg=BG_COLOR, fg="#A0522D").grid(row=0, column=col_idx_devotion)
@@ -660,6 +659,8 @@ def get_artifact_details():
     # -----------------------------------------------------------
     # [리스트 생성 루프]
     # -----------------------------------------------------------
+    # 알고리즘용 constraint를 가진 아티팩트 목록('UNLOCK' 석판으로 해제 불가능한)
+    NON_UNLOCKABLE_ARTS = ["빛나는 모래시계", "조화의 수정", "하얀 종이"]
     for art in artifacts:
         if art.quant > 0:
             for i in range(art.quant):
@@ -691,7 +692,7 @@ def get_artifact_details():
                             command=calculate_realtime).grid(row=0, column=3)
 
                 var_unlock = None
-                if art.constraint:
+                if art.constraint and art.name not in NON_UNLOCKABLE_ARTS:
                     var_unlock = BooleanVar(value=False)
                     Checkbutton(row_f, variable=var_unlock, bg=BG_COLOR, activebackground=BG_COLOR,
                                 command=calculate_realtime).grid(row=0, column=4)
@@ -751,6 +752,10 @@ def get_artifact_details():
                 })
 
     def validate_and_start():
+        # 'UNLOCK' 석판으로 하나의 제약만 없애야 할 때
+        PARTIAL_UNLOCK_RULES = {
+            "다용도 벨트": {'bottom'}
+        }
         final_instances = []
         required_points = 0
         unlocks_used = 0
@@ -772,9 +777,14 @@ def get_artifact_details():
 
             if item['unlock_var'] and item['unlock_var'].get():
                 unlocks_used += 1
-                instance.constraint = set()
+                # 부분 해제 규칙
+                if instance.name in PARTIAL_UNLOCK_RULES:
+                    if instance.constraint:
+                        instance.constraint -= PARTIAL_UNLOCK_RULES[instance.name]
+                else:
+                    instance.constraint = set()
 
-            # [New] 좌우 배치 저장 (천칭, 영원의 식 공용)
+            # 좌우 배치 저장 (천칭, 영원의 식 공용)
             if item['scale_cb']:
                 instance.scale_position = item['scale_cb'].get()
 
@@ -800,7 +810,6 @@ def get_artifact_details():
         if warnings:
             if not messagebox.askyesno("경고", "다음 문제가 있습니다:\n" + "\n".join(warnings) + "\n\n진행할까요?"): return
 
-        root.destroy()
         arrangement(USER_INV_NUM, tablets, final_instances)
 
     def prev_click():
@@ -812,18 +821,158 @@ def get_artifact_details():
     Button(bf, text="배치 시작", command=validate_and_start, **BTN_STYLE).pack(side="left", padx=10)
 
 
-
 # ==========================================
-# [알고리즘 (임시)]
+# [알고리즘 실행 및 결과 표시]
 # ==========================================
 def arrangement(inv_num, tablets, artifacts):
-    logging.info(f"--- 최종 데이터 ---")
-    logging.info(f"인벤토리: {inv_num}")
-    logging.info(f"보유 석판: {sum(t.quant for t in tablets)}개")
-    logging.info(f"배치할 아티팩트 인스턴스: {len(artifacts)}개")
-    for i, art in enumerate(artifacts):
-        logging.info(f"  #{i + 1} {art.name} (+{art.current_enchant}) 필수:{art.priority}")
-    pass  # 여기서부터 알고리즘 시작
+    logging.info(f"--- 배치 알고리즘 시작 ---")
+
+    # 1. 데이터 평탄화 (Flatten)
+    # 알고리즘 엔진은 '수량(quant)' 개념을 모르고 개별 객체로 다룹니다.
+    flat_items = []
+
+    # 아티팩트: 이미 개별 인스턴스로 쪼개져서 넘어옴
+    for art in artifacts:
+        flat_items.append(art)
+
+    # 석판: 'quant' 수량만큼 복제해서 리스트에 넣어야 함
+    for tab in tablets:
+        if tab.quant > 0:
+            for _ in range(tab.quant):
+                # 깊은 복사를 해야 서로 다른 회전값을 가질 수 있음
+                new_tab = copy.deepcopy(tab)
+                new_tab.quant = 1  # 개별 객체이므로 1로 설정
+                flat_items.append(new_tab)
+
+    logging.info(f"배치할 총 아이템 수: {len(flat_items)}")
+
+    if len(flat_items) > inv_num:
+        messagebox.showerror("오류", f"아이템 개수({len(flat_items)})가 인벤토리 칸 수({inv_num})보다 많습니다!")
+        return
+
+    # 2. 로딩 창 띄우기 (계산하는 동안 사용자가 알 수 있게)
+    loading_win = Toplevel(root)
+    loading_win.title("계산 중...")
+    set_center_window(loading_win, 300, 100)
+    Label(loading_win, text="최적의 배치를 찾는 중입니다...\n잠시만 기다려주세요.", pady=20).pack()
+    loading_win.update()  # 화면 갱신 강제 수행
+
+    # 3. Solver 실행 (3초간 계산)
+    # 여기서 solver.py의 run_solver가 호출됩니다.
+    try:
+        best_solution = run_solver(inv_num, flat_items, max_time=3)
+    except Exception as e:
+        loading_win.destroy()
+        logging.error(f"알고리즘 에러: {e}")
+        messagebox.showerror("에러", f"배치 중 오류가 발생했습니다:\n{e}")
+        return
+
+    loading_win.destroy()
+
+    # 4. 결과 화면 보여주기
+    show_result_window(best_solution)
+
+
+# ==========================================
+# [결과 화면 표시 (이미지 & 회전 & 인벤 제한 적용)]
+# ==========================================
+def show_result_window(solution):
+    """계산된 Grid를 시각적으로 보여주는 창"""
+    res_win = Toplevel(root)
+
+    # 점수 표시
+    res_win.title(f"배치 결과 (점수: {solution.score})")
+    set_center_window(res_win, 600, 750)
+
+    # 캔버스 생성
+    canvas = Canvas(res_win, bg="white")
+    canvas.pack(fill="both", expand=True)
+
+    # 이미지 참조 유지용 리스트 (가비지 컬렉션 방지)
+    canvas.image_refs = []
+
+    CELL_SIZE = 70  # 이미지 잘 보이게 칸 키움
+    IMG_SIZE = 60  # 안에 들어갈 이미지 크기
+    MARGIN = 20
+
+    grid = solution.grid
+    rows = len(grid)
+    cols = len(grid[0])
+
+    # 캔버스 크기 자동 조절
+    can_w = MARGIN * 2 + cols * CELL_SIZE
+    can_h = MARGIN * 2 + rows * CELL_SIZE
+    res_win.geometry(f"{can_w}x{can_h + 60}")
+
+    for r in range(rows):
+        for c in range(cols):
+            # 현재 칸의 인덱스 (0부터 시작)
+            cell_idx = r * 6 + c
+
+            x1 = MARGIN + c * CELL_SIZE
+            y1 = MARGIN + r * CELL_SIZE
+            x2 = x1 + CELL_SIZE
+            y2 = y1 + CELL_SIZE
+            center_x = (x1 + x2) // 2
+            center_y = (y1 + y2) // 2
+
+            # [Req 2] 인벤토리 칸 수 초과 시 '잠긴 칸' 처리
+            if cell_idx >= USER_INV_NUM:
+                # 빗금 친 회색 칸 그리기
+                canvas.create_rectangle(x1, y1, x2, y2, fill="#404040", outline="gray")
+                canvas.create_line(x1, y1, x2, y2, fill="#606060", width=2)
+                canvas.create_line(x1, y2, x2, y1, fill="#606060", width=2)
+                continue  # 아이템 그리지 않음
+
+            # 정상 칸 테두리
+            canvas.create_rectangle(x1, y1, x2, y2, outline="lightgray")
+
+            cell = grid[r][c]
+            if cell:
+                item = cell['item']
+                rot = cell['rotation']  # 0, 1, 2, 3
+
+                # 배경색 (구분감)
+                bg_col = "#E0F7FA" if item.item_type == 'Artifact' else "#FFF3E0"
+                if item.name == "빛나는 모래시계": bg_col = "#FFF9C4"
+                if item.name == "헌신의 휘장": bg_col = "#FFCCBC"
+
+                canvas.create_rectangle(x1 + 2, y1 + 2, x2 - 2, y2 - 2, fill=bg_col, outline="")
+
+                # [Req 1, 3] 이미지 로드 및 회전 처리
+                # 기존 캐시된 PhotoImage는 회전이 안 되므로, PIL로 새로 엽니다.
+                try:
+                    target_dir = art_image_dir if item.item_type == 'Artifact' else image_dir
+                    img_path = os.path.join(target_dir, f"{item.name}.PNG")
+
+                    if os.path.exists(img_path):
+                        pil_img = Image.open(img_path)
+                        pil_img = pil_img.resize((IMG_SIZE, IMG_SIZE), Image.Resampling.BILINEAR)
+
+                        # 석판이면 회전 적용 (PIL rotate는 시계반대방향이 기준이라 음수 사용)
+                        # 1(90도) -> -90
+                        if item.item_type == 'Tablet' and rot > 0:
+                            pil_img = pil_img.rotate(-90 * rot)
+
+                        tk_img = ImageTk.PhotoImage(pil_img)
+
+                        # 캔버스에 그리기
+                        canvas.create_image(center_x, center_y, image=tk_img)
+                        canvas.image_refs.append(tk_img)  # 참조 유지
+                    else:
+                        # 이미지가 없으면 텍스트로 대체
+                        canvas.create_text(center_x, center_y, text=item.name[:4], font=(FONT_NAME, 8))
+
+                except Exception as e:
+                    logging.error(f"이미지 처리 중 오류: {e}")
+                    canvas.create_text(center_x, center_y, text="Err", font=(FONT_NAME, 8))
+
+                # 디버깅용: 텍스트로 회전값 작게 표시 (선택사항)
+                if rot > 0:
+                    canvas.create_text(x2-10, y2-10, text=f"R{rot}", font=("Arial", 7), fill="red")
+
+    # 닫기 버튼
+    Button(res_win, text="닫기", command=res_win.destroy, **BTN_STYLE).pack(side='bottom', pady=10)
 
 
 # [실행부]
